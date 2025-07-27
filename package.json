@@ -1,6 +1,6 @@
 {
 	"name": "@blank-utils/cache",
-	"version": "0.1.5",
+	"version": "0.1.6",
 	"description": "A simple, fast, and flexible cache library for Deno and JavaScript, supporting LRU, LFU, FIFO, and EXPIRE strategies. Works great with TypeScript and is published on jsr.io.",
 	"main": "dist/mod.js",
 	"module": "dist/mod.js",
