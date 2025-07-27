@@ -1,0 +1,30 @@
+{
+	"name": "@blank-utils/cache",
+	"version": "0.1.5",
+	"description": "A simple, fast, and flexible cache library for Deno and JavaScript, supporting LRU, LFU, FIFO, and EXPIRE strategies. Works great with TypeScript and is published on jsr.io.",
+	"main": "dist/mod.js",
+	"module": "dist/mod.js",
+	"types": "dist/mod.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/mod.js",
+			"require": "./dist/mod.js"
+		}
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kiritocode1/Blank-Cache"
+	},
+	"author": "BLANK",
+	"license": "MIT",
+	"keywords": [
+		"cache",
+		"lru",
+		"lfu",
+		"fifo",
+		"expire",
+		"typescript",
+		"deno",
+		"jsr"
+	]
+}

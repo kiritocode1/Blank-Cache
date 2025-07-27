@@ -13,7 +13,25 @@ A simple, fast, and flexible cache library for Deno and JavaScript, supporting L
 
 ## Install
 
-**With JSR (recommended):**
+**With npm:**
+
+```sh
+npm install @blank-utils/cache
+```
+
+**With pnpm:**
+
+```sh
+pnpm add @blank-utils/cache
+```
+
+**With bun:**
+
+```sh
+bun add @blank-utils/cache
+```
+
+**With JSR (recommended for Deno):**
 
 ```ts
 import Cache from "jsr:@blank/cache";
