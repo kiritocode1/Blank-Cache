@@ -8,6 +8,7 @@
  * - EXPIRE (Time-based expiration)
  * - TypeScript support
  *
+ * # LRU
  * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
@@ -15,7 +16,8 @@
  * const key = cache.set("item");
  * cache.get(key); // "item"
  * ```
- * 
+ * # EXPIRE
+ * @example
  * ```ts 
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ maxAge: 1000, type: "EXPIRE" });
@@ -26,20 +28,22 @@
  * }, 2 000);
  * ```
  *
+ * # LFU
+ * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ max: 3, type: "LFU" });
  * const key = cache.set("item");
  * cache.get(key); // "item"
  * ```
- *
+ * # FIFO
+ * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ max: 3, type: "FIFO" });
  * const key = cache.set("item");
  * cache.get(key); // "item"
  * ```
- *
  * 
  * @module
  */
