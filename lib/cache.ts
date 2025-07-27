@@ -210,7 +210,7 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		},
 
 		_update_fifo_entries(keyUnique: string) {
-			// FIFO doesn"t need to update entries on access
+			// FIFO doesn't need to update entries on access
 			// The order is maintained by insertedAt timestamp
 			for (const [key, value] of cache) {
 				if (keyUnique === key) {
