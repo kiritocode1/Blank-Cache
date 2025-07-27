@@ -22,42 +22,37 @@ interface CacheEntry {
 }
 
 /**
+ * Create a cache for any kind of data. Supports LRU, LFU, FIFO, and EXPIRE strategies.
  *
+ * @param {Object} option - Cache options.
+ * @param {number} [option.max] - Max items for LRU, LFU, FIFO.
+ * @param {number} [option.maxAge] - Max age in ms for EXPIRE cache.
+ * @param {"LRU" | "LFU" | "FIFO" | "EXPIRE"} option.type - Type of cache.
+ * @returns {Object} Cache API with set, get, remove, clear, has, size, get_state_of_cache.
  *
+ * @example
+ * const cache = Cache({ max: 3, type: "LRU" });
+ * const key = cache.set("item");
+ * cache.get(key); // "item"
  *
- * the entry point of the cache library , designed to work with any type of data.
- * some examples of how to use the cache library below:
- * ```ts
- * const cache = Cache({ max: 10, type: "LRU" });
- * ```
- *  max is the max number of items in the cache , type is the type of the cache , LRU is the least recently used cache , LFU is the least frequently used cache , FIFO is the first in first out cache.
- * ```ts
- * const key1 = cache.set("item1");// key1 is a random uuid
- * const key2 = cache.set("item2");// key2 is a random uuid
- * const key3 = cache.set("item3");// key3 is a random uuid
- *
- * cache.get(key1);// returns "item1" , cache update = [item1, item2, item3]
- * cache.get(key2);// returns "item2" , cache update = [item2, item3, item1]
- * cache.get(key3);// returns "item3" , cache update = [item3, item1, item2]
- *
- * cache.get_state_of_cache();// returns a map of the cache , the key is the uuid and the value is the item
- *
- * cache.set("item4");// returns a random uuid , cache update = [item4, item1, item2] , if the cache is full , the least recently used item is evicted
- *
- *
- *
- *
- *
- *
- *
- *
- *
+ * @example
+ * const cache = Cache({ maxAge: 1000, type: "EXPIRE" });
+ * const key = cache.set("item");
+ * // after 1s, cache.get(key) will be undefined
  */
 function Cache(option: Option = { max: 10, type: "LRU" }) {
 	const cache = new Map<string, CacheEntry>();
 	const timers = new Map<string, number>(); // Track setTimeout IDs for EXPIRE cache
 
 	const cacheAPI = {
+		/**
+		 * Get an item from the cache by key.
+		 * Updates recency/frequency for LRU/LFU.
+		 * @param {string} key - The key from set().
+		 * @returns {unknown|undefined} The cached value, or undefined if not found or expired.
+		 * @example
+		 * const value = cache.get(key);
+		 */
 		get(key: string): CacheEntry["content"] | undefined {
 			const cacheEntry = cache.get(key);
 			if (!cacheEntry) return undefined;
@@ -89,6 +84,14 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 			return cacheEntry.content;
 		},
 
+		/**
+		 * Add a value to the cache. Returns a unique key (UUID).
+		 * May evict an item if cache is full.
+		 * @param {unknown} value - The value to store.
+		 * @returns {string} The key for the value.
+		 * @example
+		 * const key = cache.set("item");
+		 */
 		set(value: unknown): string {
 			const key = crypto.randomUUID();
 
@@ -198,7 +201,7 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 		},
 
 		_update_fifo_entries(keyUnique: string) {
-			// FIFO doesn&apos;t need to update entries on access
+			// FIFO doesn"t need to update entries on access
 			// The order is maintained by insertedAt timestamp
 			for (const [key, value] of cache) {
 				if (keyUnique === key) {
@@ -207,10 +210,23 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 			}
 		},
 
+		/**
+		 * Get the current state of the cache as a Map.
+		 * Useful for debugging or inspection.
+		 * @returns {Map<string, CacheEntry>} Map of key to cache entry.
+		 * @example
+		 * const state = cache.get_state_of_cache();
+		 */
 		get_state_of_cache(): Map<string, CacheEntry> {
 			return new Map(cache.entries());
 		},
 
+		/**
+		 * Remove all items from the cache.
+		 * Also clears timers for EXPIRE cache.
+		 * @example
+		 * cache.clear();
+		 */
 		clear() {
 			// Clear all timers for EXPIRE cache
 			if (option.type === "EXPIRE") {
@@ -222,6 +238,12 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 			cache.clear();
 		},
 
+		/**
+		 * Remove a specific item from the cache by key.
+		 * @param {string} key - The key to remove.
+		 * @example
+		 * cache.remove(key);
+		 */
 		remove(key: string) {
 			// Clear timer if it exists (for EXPIRE cache)
 			if (option.type === "EXPIRE") {
@@ -234,6 +256,13 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 			cache.delete(key);
 		},
 
+		/**
+		 * Check if a key exists in the cache and is not expired.
+		 * @param {string} key - The key to check.
+		 * @returns {boolean} True if present and not expired.
+		 * @example
+		 * cache.has(key);
+		 */
 		has(key: string) {
 			const entry = cache.get(key);
 			if (!entry) return false;
@@ -255,6 +284,12 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 			return true;
 		},
 
+		/**
+		 * Get the number of items in the cache (expired items are cleaned up first for EXPIRE).
+		 * @returns {number} Number of items in the cache.
+		 * @example
+		 * cache.size();
+		 */
 		size() {
 			// Clean up expired items before returning size (for EXPIRE cache)
 			if (option.type === "EXPIRE") {
