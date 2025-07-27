@@ -40,14 +40,18 @@ interface CacheAPI {
  * @returns {Object} Cache API with set, get, remove, clear, has, size, get_state_of_cache.
  *
  * @example
+ * ```ts
  * const cache = Cache({ max: 3, type: "LRU" });
  * const key = cache.set("item");
  * cache.get(key); // "item"
+ * ```
  *
  * @example
+ * ```ts
  * const cache = Cache({ maxAge: 1000, type: "EXPIRE" });
  * const key = cache.set("item");
  * // after 1s, cache.get(key) will be undefined
+ * ```
  */
 function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 	const cache = new Map<string, CacheEntry>();
@@ -60,7 +64,9 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * @param {string} key - The key from set().
 		 * @returns {unknown|undefined} The cached value, or undefined if not found or expired.
 		 * @example
+         * ```ts
 		 * const value = cache.get(key);
+         * ```
 		 */
 		get(key: string): CacheEntry["content"] | undefined {
 			const cacheEntry = cache.get(key);
@@ -99,7 +105,9 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * @param {unknown} value - The value to store.
 		 * @returns {string} The key for the value.
 		 * @example
+		 * ```ts
 		 * const key = cache.set("item");
+		 * ```
 		 */
 		set(value: unknown): string {
 			const key = crypto.randomUUID();
@@ -224,19 +232,28 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * Useful for debugging or inspection.
 		 * @returns {Map<string, CacheEntry>} Map of key to cache entry.
 		 * @example
+		 * ```ts
 		 * const state = cache.get_state_of_cache();
+		 * ```
 		 */
 		get_state_of_cache(): Map<string, CacheEntry> {
-			return new Map(cache.entries());
+			// deno-lint-ignore no-explicit-any
+			const state: any = {};
+			for (const [key, value] of cache) {
+				state[key] = value;
+			}
+			return state;
 		},
 
 		/**
 		 * Remove all items from the cache.
 		 * Also clears timers for EXPIRE cache.
 		 * @example
+		 * ```ts
 		 * cache.clear();
+		 * ```
 		 */
-		clear() {
+		clear(): void {
 			// Clear all timers for EXPIRE cache
 			if (option.type === "EXPIRE") {
 				for (const timerId of timers.values()) {
@@ -251,9 +268,11 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * Remove a specific item from the cache by key.
 		 * @param {string} key - The key to remove.
 		 * @example
+		 * ```ts
 		 * cache.remove(key);
+		 * ```
 		 */
-		remove(key: string) {
+		remove(key: string): void {
 			// Clear timer if it exists (for EXPIRE cache)
 			if (option.type === "EXPIRE") {
 				const timerId = timers.get(key);
@@ -270,9 +289,11 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * @param {string} key - The key to check.
 		 * @returns {boolean} True if present and not expired.
 		 * @example
+		 * ```ts
 		 * cache.has(key);
+		 * ```
 		 */
-		has(key: string) {
+		has(key: string): boolean {
 			const entry = cache.get(key);
 			if (!entry) return false;
 
@@ -297,9 +318,11 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * Get the number of items in the cache (expired items are cleaned up first for EXPIRE).
 		 * @returns {number} Number of items in the cache.
 		 * @example
+		* ```ts
 		 * cache.size();
+		 * ```
 		 */
-		size() {
+		size(): number {
 			// Clean up expired items before returning size (for EXPIRE cache)
 			if (option.type === "EXPIRE") {
 				const now = Date.now();
