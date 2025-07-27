@@ -21,6 +21,15 @@ interface CacheEntry {
 	insertedAt: number; // @required for FIFO;
 }
 
+interface CacheAPI {
+	get(key: string): CacheEntry["content"] | undefined;
+	set(value: unknown): string;
+	remove(key: string): void;
+	clear(): void;
+	has(key: string): boolean;
+	size(): number;
+	get_state_of_cache(): Map<string, CacheEntry>;
+}
 /**
  * Create a cache for any kind of data. Supports LRU, LFU, FIFO, and EXPIRE strategies.
  *
@@ -40,7 +49,7 @@ interface CacheEntry {
  * const key = cache.set("item");
  * // after 1s, cache.get(key) will be undefined
  */
-function Cache(option: Option = { max: 10, type: "LRU" }) {
+function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 	const cache = new Map<string, CacheEntry>();
 	const timers = new Map<string, number>(); // Track setTimeout IDs for EXPIRE cache
 
