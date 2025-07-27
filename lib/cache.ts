@@ -321,3 +321,5 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 }
 
 export default Cache;
+
+export type { ExpireOption, NonExpireOption, Option, CacheEntry };
