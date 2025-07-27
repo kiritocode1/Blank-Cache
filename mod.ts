@@ -9,7 +9,6 @@
  * - TypeScript support
  *
  * # LRU
- * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ max: 3, type: "LRU" });
@@ -17,7 +16,6 @@
  * cache.get(key); // "item"
  * ```
  * # EXPIRE
- * @example
  * ```ts 
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ maxAge: 1000, type: "EXPIRE" });
@@ -29,7 +27,6 @@
  * ```
  *
  * # LFU
- * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ max: 3, type: "LFU" });
@@ -37,7 +34,6 @@
  * cache.get(key); // "item"
  * ```
  * # FIFO
- * @example
  * ```ts
  * import Cache from "jsr:@blank/cache";
  * const cache = Cache({ max: 3, type: "FIFO" });
