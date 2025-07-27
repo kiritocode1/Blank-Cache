@@ -64,9 +64,9 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * @param {string} key - The key from set().
 		 * @returns {unknown|undefined} The cached value, or undefined if not found or expired.
 		 * @example
-         * ```ts
+		 * ```ts
 		 * const value = cache.get(key);
-         * ```
+		 * ```
 		 */
 		get(key: string): CacheEntry["content"] | undefined {
 			const cacheEntry = cache.get(key);
@@ -237,12 +237,8 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * ```
 		 */
 		get_state_of_cache(): Map<string, CacheEntry> {
-			// deno-lint-ignore no-explicit-any
-			const state: any = {};
-			for (const [key, value] of cache) {
-				state[key] = value;
-			}
-			return state;
+			// Return a shallow copy of the cache Map for inspection
+			return new Map(cache);
 		},
 
 		/**
@@ -318,7 +314,7 @@ function Cache(option: Option = { max: 10, type: "LRU" }): CacheAPI {
 		 * Get the number of items in the cache (expired items are cleaned up first for EXPIRE).
 		 * @returns {number} Number of items in the cache.
 		 * @example
-		* ```ts
+		 * ```ts
 		 * cache.size();
 		 * ```
 		 */
