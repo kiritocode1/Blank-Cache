@@ -178,6 +178,59 @@ Deno.test("FIFO Cache - Eviction behavior", () => {
 	assertEquals(cache.get(key4), "item4");
 });
 
+Deno.test("EXPIRE Cache - Basic functionality", async () => {
+	const cache = Cache({ maxAge: 1000, type: "EXPIRE" });
+
+	const key1 = cache.set("item1");
+	const key2 = cache.set("item2");
+
+	assertEquals(cache.get(key1), "item1");
+	assertEquals(cache.get(key2), "item2");
+	assertEquals(cache.get_state_of_cache().size, 2);
+
+	// Clean up timers to prevent memory leaks
+	cache.clear();
+});
+
+Deno.test("EXPIRE Cache - Expiration behavior", async () => {
+	const cache = Cache({ maxAge: 100, type: "EXPIRE" }); // 100ms
+
+	const key1 = cache.set("item1");
+	assertEquals(cache.get(key1), "item1");
+
+	// Wait for expiration
+	await new Promise((resolve) => setTimeout(resolve, 150));
+
+	// Item should be expired
+	assertEquals(cache.get(key1), undefined);
+	assertEquals(cache.get_state_of_cache().size, 0);
+});
+
+Deno.test("Cache - Utility methods", () => {
+	const cache = Cache({ max: 5, type: "LRU" });
+
+	const key1 = cache.set("item1");
+	const key2 = cache.set("item2");
+
+	// Test size
+	assertEquals(cache.size(), 2);
+
+	// Test has
+	assertEquals(cache.has(key1), true);
+	assertEquals(cache.has(key2), true);
+	assertEquals(cache.has("nonexistent"), false);
+
+	// Test remove
+	cache.remove(key1);
+	assertEquals(cache.has(key1), false);
+	assertEquals(cache.size(), 1);
+
+	// Test clear
+	cache.clear();
+	assertEquals(cache.size(), 0);
+	assertEquals(cache.has(key2), false);
+});
+
 Deno.test("Cache - UUID key generation", () => {
 	const cache = Cache({ max: 10, type: "LRU" });
 

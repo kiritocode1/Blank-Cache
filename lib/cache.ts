@@ -23,42 +23,58 @@ interface CacheEntry {
 
 /**
  *
- * 
+ *
  *
  * the entry point of the cache library , designed to work with any type of data.
- * some examples of how to use the cache library below: 
- * ```ts 
+ * some examples of how to use the cache library below:
+ * ```ts
  * const cache = Cache({ max: 10, type: "LRU" });
  * ```
- *  max is the max number of items in the cache , type is the type of the cache , LRU is the least recently used cache , LFU is the least frequently used cache , FIFO is the first in first out cache. 
+ *  max is the max number of items in the cache , type is the type of the cache , LRU is the least recently used cache , LFU is the least frequently used cache , FIFO is the first in first out cache.
  * ```ts
  * const key1 = cache.set("item1");// key1 is a random uuid
  * const key2 = cache.set("item2");// key2 is a random uuid
  * const key3 = cache.set("item3");// key3 is a random uuid
- * 
+ *
  * cache.get(key1);// returns "item1" , cache update = [item1, item2, item3]
  * cache.get(key2);// returns "item2" , cache update = [item2, item3, item1]
  * cache.get(key3);// returns "item3" , cache update = [item3, item1, item2]
- * 
+ *
  * cache.get_state_of_cache();// returns a map of the cache , the key is the uuid and the value is the item
- * 
+ *
  * cache.set("item4");// returns a random uuid , cache update = [item4, item1, item2] , if the cache is full , the least recently used item is evicted
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 function Cache(option: Option = { max: 10, type: "LRU" }) {
 	const cache = new Map<string, CacheEntry>();
+	const timers = new Map<string, number>(); // Track setTimeout IDs for EXPIRE cache
+
 	const cacheAPI = {
 		get(key: string): CacheEntry["content"] | undefined {
 			const cacheEntry = cache.get(key);
 			if (!cacheEntry) return undefined;
+
+			// Check if item has expired (for EXPIRE cache)
+			if (option.type === "EXPIRE" && cacheEntry.expires !== false) {
+				if (Date.now() > cacheEntry.expires) {
+					cache.delete(key);
+					// Clear the timer if it exists
+					const timerId = timers.get(key);
+					if (timerId) {
+						clearTimeout(timerId);
+						timers.delete(key);
+					}
+					return undefined;
+				}
+			}
 
 			if (option.type === "LRU") {
 				cacheAPI._update_lru_entries(key);
@@ -102,17 +118,24 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 					cache.delete(fifo_key);
 				}
 				cache.set(key, { expires: false, content: value, index: 0, frequency: 0, insertedAt: Date.now() });
-            }
-            if(option.type === "EXPIRE"){
-                cache.set(key, {
-                    expires: Date.now() + option.maxAge, content: value, index: 0, frequency: 0, insertedAt:
-                        Date.now()
-                });
+			}
 
-                setTimeout(() => {
-                    cache.delete(key);
-                }, option.maxAge);
-            }
+			if (option.type === "EXPIRE") {
+				cache.set(key, {
+					expires: Date.now() + option.maxAge,
+					content: value,
+					index: 0,
+					frequency: 0,
+					insertedAt: Date.now(),
+				});
+
+				const timerId = setTimeout(() => {
+					cache.delete(key);
+					timers.delete(key);
+				}, option.maxAge);
+
+				timers.set(key, timerId);
+			}
 
 			return key;
 		},
@@ -177,6 +200,11 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 		_update_fifo_entries(keyUnique: string) {
 			// FIFO doesn&apos;t need to update entries on access
 			// The order is maintained by insertedAt timestamp
+			for (const [key, value] of cache) {
+				if (keyUnique === key) {
+					cache.set(key, { ...value, insertedAt: Date.now() });
+				}
+			}
 		},
 
 		get_state_of_cache(): Map<string, CacheEntry> {
@@ -184,19 +212,66 @@ function Cache(option: Option = { max: 10, type: "LRU" }) {
 		},
 
 		clear() {
+			// Clear all timers for EXPIRE cache
+			if (option.type === "EXPIRE") {
+				for (const timerId of timers.values()) {
+					clearTimeout(timerId);
+				}
+				timers.clear();
+			}
 			cache.clear();
 		},
 
 		remove(key: string) {
+			// Clear timer if it exists (for EXPIRE cache)
+			if (option.type === "EXPIRE") {
+				const timerId = timers.get(key);
+				if (timerId) {
+					clearTimeout(timerId);
+					timers.delete(key);
+				}
+			}
 			cache.delete(key);
 		},
 
 		has(key: string) {
-			return cache.has(key);
+			const entry = cache.get(key);
+			if (!entry) return false;
+
+			// Check if item has expired (for EXPIRE cache)
+			if (option.type === "EXPIRE" && entry.expires !== false) {
+				if (Date.now() > entry.expires) {
+					cache.delete(key);
+					// Clear the timer if it exists
+					const timerId = timers.get(key);
+					if (timerId) {
+						clearTimeout(timerId);
+						timers.delete(key);
+					}
+					return false;
+				}
+			}
+
+			return true;
 		},
+
 		size() {
+			// Clean up expired items before returning size (for EXPIRE cache)
+			if (option.type === "EXPIRE") {
+				const now = Date.now();
+				for (const [key, entry] of cache.entries()) {
+					if (entry.expires !== false && now > entry.expires) {
+						cache.delete(key);
+						const timerId = timers.get(key);
+						if (timerId) {
+							clearTimeout(timerId);
+							timers.delete(key);
+						}
+					}
+				}
+			}
 			return cache.size;
-        },
+		},
 	};
 	return cacheAPI;
 }
