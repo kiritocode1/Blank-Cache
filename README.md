@@ -107,3 +107,8 @@ MIT
 
 -   [JSR Package](https://jsr.io/@blank/cache)
 -   [GitHub](https://github.com/kiritocode1/Blank-Cache)
+
+
+## Work in progress 
+- [] add the TS type for the cache in npm . 
+- [x] add the TS type for the cache in deno.land/x .
